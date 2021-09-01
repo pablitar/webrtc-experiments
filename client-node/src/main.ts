@@ -6,12 +6,11 @@ const wrtc = require("wrtc") as { RTCPeerConnection: typeof RTCPeerConnection, R
 
   const { RTCSessionDescription, RTCPeerConnection, RTCIceCandidate } = wrtc
 
-  function log(message?: any, ...optionalParams: any[]): void {
-    console.log(`[${connectionId}]`, message, ...optionalParams)
-  }
-
-
   function logEvents(id: number, connection: RTCPeerConnection) {
+    function log(message?: any, ...optionalParams: any[]): void {
+      console.log(`[${id}]`, message, ...optionalParams)
+    }
+
     [
       "datachannel",
       "icecandidateerror",
@@ -28,6 +27,10 @@ const wrtc = require("wrtc") as { RTCPeerConnection: typeof RTCPeerConnection, R
   }
 
   function logDataEvents(id: number, dataChannel: RTCDataChannel) {
+    function log(message?: any, ...optionalParams: any[]): void {
+      console.log(`[${id}]`, message, ...optionalParams)
+    }
+
     ["bufferedamountlow", "close", "error", "message", "open"].forEach((evKey) =>
       dataChannel.addEventListener(evKey, (ev) => {
         log(`Received event ${evKey} on connection with id ${id}`, ev);
@@ -35,10 +38,16 @@ const wrtc = require("wrtc") as { RTCPeerConnection: typeof RTCPeerConnection, R
     );
   }
 
-  let connectionId: number | undefined
+
 
   async function startHandshake() {
     return new Promise<RTCDataChannel>(async (resolve, reject) => {
+      let connectionId: number | undefined
+
+      function log(message?: any, ...optionalParams: any[]): void {
+        console.log(`[${connectionId}]`, message, ...optionalParams)
+      }
+
       try {
         const offerResponse = await fetch("http://localhost:8085/offer");
 
@@ -82,7 +91,8 @@ const wrtc = require("wrtc") as { RTCPeerConnection: typeof RTCPeerConnection, R
               body: JSON.stringify({ answer, candidates }),
             }
           );
-          const answerResponseText = await answerResponse.text()
+
+          await answerResponse.text()
 
           log("Received answer response");
         } else {
@@ -101,12 +111,12 @@ const wrtc = require("wrtc") as { RTCPeerConnection: typeof RTCPeerConnection, R
 
     while (true) {
       dataChannel.send("Hello")
-      await delay(1000)
+      await delay(5000)
     }
   }
 
-  for (let i = 0; i < 20; i++) {
-    for (let i = 0; i < 10; i++) {
+  for (let i = 0; i < 200; i++) {
+    for (let i = 0; i < 5; i++) {
       main().catch(e => console.error("Error on main", e))
     }
     await delay(500)
